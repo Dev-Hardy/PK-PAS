@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="id">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Penyimpanan File PK PAS</title>
+  <style>
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, Arial, sans-serif;
+      background: linear-gradient(180deg, #071027 0%, #08122b 100%);
+      color: #e6eef8;
+      padding: 20px;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: #0b1220;
+      padding: 20px;
+      border-radius: 10px
+    }
+
+    h1 {
+      margin: 0 0 8px 0;
+      font-size: 20px
+    }
+
+    p.lead {
+      margin: 0 0 16px 0;
+      color: #94a3b8;
+      font-size: 13px
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      color: #94a3b8
+    }
+
+    select,
+    input[type=file] {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      background: #000;
+      color: #fff
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 16px
+    }
+
+    @media(max-width:1200px) {
+      .grid {
+        grid-template-columns: 1fr
+      }
+    }
+
+    .card {
+      background: #071226;
+      padding: 14px;
+      border-radius: 10px
+    }
+
+    .month-list {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      width: 100%
+    }
+
+    @media(max-width:1200px) {
+      .month-list {
+        grid-template-columns: repeat(2, 1fr)
+      }
+    }
+
+    .month {
+      background: rgba(255, 255, 255, 0.03);
+      padding: 10px;
+      border-radius: 8px;
+      min-width: 0
+    }
+
+    .btn {
+      background: #1f17af;
+      color: #fff;
+      border: none;
+      padding: 8px 10px;
+      border-radius: 8px;
+      cursor: pointer
+    }
+
+    .btn-danger {
+      background: #ef4444
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: #e6eef8
+    }
+
+    .files {
+      margin-top: 12px;
+      max-height: 420px;
+      overflow: auto
+    }
+
+    .file-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      background: rgba(255, 255, 255, 0.02)
+    }
+
+    .meta {
+      font-size: 13px
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px
+    }
+
+    .hint {
+      font-size: 12px;
+      color: #94a3b8
+    }
+
+    /* preview modal */
+    #previewModal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      align-items: center;
+      justify-content: center;
+      z-index: 9999
+    }
+
+    #previewInner {
+      background: #071226;
+      padding: 16px;
+      border-radius: 10px;
+      max-width: 90%;
+      max-height: 90%;
+      overflow: auto;
+      position: relative
+    }
+
+    #previewInner iframe {
+      width: 100%;
+      height: 70vh;
+      border: none;
+      border-radius: 8px
+    }
+
+    #previewInner img {
+      max-width: 100%;
+      border-radius: 8px
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #ef4444;
+      border: none;
+      color: white;
+      padding: 6px 8px;
+      border-radius: 6px;
+      cursor: pointer
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1 style="text-align:center;">Penyimpanan File PK PAS</h1>
+    <p class="lead" style="text-align:center;">Tempat Penyimpanan File Bidang Pembimbing Kemasyarakatan</p>
+
+    <div class="card" style="margin-bottom:12px">
+      <h3 style="margin:0 0 10px 0">Form Upload</h3>
+
+      <label for="bidangSelect">Pilih Bidang</label>
+      <select id="bidangSelect">
+        <option value="">-- Pilih Bidang --</option>
+        <option value="bidang1">Bidang Pembimbing Klien</option>
+        <option value="bidang2">Bidang Pendamping Klien</option>
+        <option value="bidang3">Bidang Pemberdayaan Klien</option>
+      </select>
+
+      <div id="uploadArea" style="margin-top:12px; display:none">
+        <label class="hint">Upload per bulan (pilih bidang dulu)</label>
+        <div class="month-list" id="monthList">
+          <!-- bulan akan di-render di sini -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Menu lihat file (Pilihan A: di bawah form) -->
+    <div class="card">
+      <h3 style="margin:0 0 10px 0">Lihat File Berdasarkan Bidang</h3>
+      <label for="viewerBidang">Pilih Bidang untuk melihat file</label>
+      <select id="viewerBidang">
+        <option value="">-- Pilih Bidang --</option>
+        <option value="Bidang Pembimbing Klien (Bulanan)">Bidang Pembimbing Klien</option>
+        <option value="Bidang Penelitian Kemasyarakatan">Bidang Pendamping Klien</option>
+        <option value="Bidang Pembimbingan Klien">Bidang Pemberdayaan Klien</option>
+      </select>
+
+      <div class="files" id="fileList" style="margin-top:12px">
+        <!-- daftar file muncul di sini -->
+      </div>
+    </div>
+  </div>
+
+  <!-- modal preview -->
+  <div id="previewModal">
+    <div id="previewInner">
+      <button id="closePreview" class="close-btn">Tutup</button>
+      <div id="previewContent" style="color:#e6eef8"></div>
+    </div>
+  </div>
+
+  <script>
+    /* ---------- IndexedDB helper ---------- */
+    const DB_NAME = 'penyimpanan_file_pkpas_v1';
+    const STORE = 'files';
+
+    function openDB() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, 1);
+        req.onupgradeneeded = e => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(STORE)) {
+            const os = db.createObjectStore(STORE, { keyPath: 'id', autoIncrement: true });
+            os.createIndex('by_field', 'field', { unique: false });
+            os.createIndex('by_field_month', ['field', 'month'], { unique: false });
+          }
+        };
+        req.onsuccess = e => resolve(e.target.result);
+        req.onerror = e => reject(e.target.error);
+      });
+    }
+
+    function addFile(meta, blob) {
+      return openDB().then(db => new Promise((res, rej) => {
+        const tx = db.transaction(STORE, 'readwrite');
+        const store = tx.objectStore(STORE);
+        const item = Object.assign({}, meta, { blob, when: new Date().toISOString() });
+        const r = store.add(item);
+        r.onsuccess = () => { db.close(); res(r.result); };
+        r.onerror = e => { db.close(); rej(e.target.error); };
+      }));
+    }
+
+    function getFiles(filter = {}) {
+      return openDB().then(db => new Promise((res, rej) => {
+        const tx = db.transaction(STORE, 'readonly');
+        const store = tx.objectStore(STORE);
+        const r = store.getAll();
+        r.onsuccess = () => {
+          db.close(); let out = r.result;
+          if (filter.field) out = out.filter(x => x.field === filter.field);
+          if (filter.month) out = out.filter(x => x.month === filter.month);
+          out.sort((a, b) => new Date(b.when) - new Date(a.when));
+          res(out);
+        };
+        r.onerror = e => { db.close(); rej(e.target.error); };
+      }));
+    }
+
+    function deleteById(id) {
+      return openDB().then(db => new Promise((res, rej) => {
+        const tx = db.transaction(STORE, 'readwrite');
+        const store = tx.objectStore(STORE);
+        const r = store.delete(Number(id));
+        r.onsuccess = () => { db.close(); res(true); };
+        r.onerror = e => { db.close(); rej(e.target.error); };
+      }));
+    }
+
+    /* ---------- UI logic ---------- */
+    const bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    const bidangSelect = document.getElementById('bidangSelect');
+    const uploadArea = document.getElementById('uploadArea');
+    const monthListEl = document.getElementById('monthList');
+
+    const viewerBidang = document.getElementById('viewerBidang');
+    const fileListEl = document.getElementById('fileList');
+
+    const previewModal = document.getElementById('previewModal');
+    const previewContent = document.getElementById('previewContent');
+    const closePreviewBtn = document.getElementById('closePreview');
+
+    /* mapping: dropdown value (bidang1/bidang2/...) -> nama lengkap (A2) */
+    function bidangLabelFromValue(val) {
+      if (val === 'bidang1') return 'Bidang Pembimbingan Klien';
+      if (val === 'bidang2') return 'Bidang Pendamping Klien';
+      if (val === 'bidang3') return 'Bidang Pemberdayaan Klien';
+      return '';
+    }
+
+    /* render month inputs (only once) */
+    function renderMonths() {
+      monthListEl.innerHTML = '';
+      bulan.forEach((b, idx) => {
+        const div = document.createElement('div');
+        div.className = 'month';
+        div.innerHTML = `
+      <div style="font-weight:600;margin-bottom:6px">${b}</div>
+      <input type="file" id="file-${b}" />
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn" data-month-index="${idx + 1}" data-month-name="${b}">Upload</button>
+        <button class="btn btn-ghost" data-clear="${b}">Clear</button>
+      </div>
+      <div class="hint" id="hint-${b}" style="margin-top:8px"></div>
+    `;
+        monthListEl.appendChild(div);
+      });
+    }
+    renderMonths();
+
+    /* when top bidang changed -> show upload area and set hint labels */
+    bidangSelect.addEventListener('change', () => {
+      const val = bidangSelect.value;
+      if (!val) { uploadArea.style.display = 'none'; return; }
+      uploadArea.style.display = 'block';
+      // update small hints to show which field is active
+      bulan.forEach(b => {
+        const hint = document.getElementById(`hint-${b}`);
+        hint.textContent = `Bidang aktif: ${bidangLabelFromValue(val)} — Bulan: ${b}`;
+      });
+    });
+
+    /* upload button delegation for month list */
+    monthListEl.addEventListener('click', async (e) => {
+      const btn = e.target.closest('button[data-month-index]');
+      if (!btn) return;
+      const monthIndex = Number(btn.getAttribute('data-month-index'));
+      const monthName = btn.getAttribute('data-month-name');
+      const input = document.getElementById(`file-${monthName}`);
+      if (!input || !input.files || input.files.length === 0) { alert('Pilih file terlebih dahulu untuk ' + monthName); return; }
+      const file = input.files[0];
+
+      const bidangVal = bidangSelect.value;
+      if (!bidangVal) { alert('Pilih bidang terlebih dahulu'); return; }
+      const fieldLabel = bidangLabelFromValue(bidangVal);
+
+      // store in IndexedDB
+      try {
+        await addFile({ field: fieldLabel, month: monthIndex, monthName, name: file.name, size: file.size, type: file.type }, file.slice(0, file.size, file.type));
+        document.getElementById(`hint-${monthName}`).textContent = `Terupload: ${file.name}`;
+        // if viewer currently showing this field, refresh list
+        if (viewerBidang.value === fieldLabel) loadFilesFor(fieldLabel);
+        alert('Upload berhasil: ' + file.name);
+        input.value = '';
+      } catch (err) {
+        console.error(err);
+        alert('Gagal upload: ' + err);
+      }
+    });
+
+    /* clear file input (not delete stored file) */
+    monthListEl.addEventListener('click', (e) => {
+      const cbtn = e.target.closest('button[data-clear]');
+      if (!cbtn) return;
+      const monthName = cbtn.getAttribute('data-clear');
+      const input = document.getElementById(`file-${monthName}`);
+      if (input) input.value = '';
+      const hint = document.getElementById(`hint-${monthName}`);
+      if (hint) hint.textContent = '';
+    });
+
+    /* Viewer: when user selects field to view */
+    viewerBidang.addEventListener('change', () => {
+      const field = viewerBidang.value;
+      if (!field) { fileListEl.innerHTML = '<div class="hint">Pilih bidang untuk melihat file.</div>'; return; }
+      loadFilesFor(field);
+    });
+
+    /* load and render files for a given field (full label) */
+    async function loadFilesFor(fieldLabel) {
+      fileListEl.innerHTML = '<div class="hint">Memuat...</div>';
+      try {
+        const rows = await getFiles({ field: fieldLabel });
+        if (!rows || rows.length === 0) {
+          fileListEl.innerHTML = '<div class="hint">Belum ada file untuk bidang ini.</div>';
+          return;
+        }
+        fileListEl.innerHTML = '';
+        rows.forEach(r => {
+          const item = document.createElement('div');
+          item.className = 'file-item';
+          const left = document.createElement('div');
+          left.className = 'meta';
+          left.innerHTML = `<div style="font-weight:600">${escapeHtml(r.name)}</div><div class="hint">${r.field} • ${r.monthName || ''} • ${new Date(r.when).toLocaleString()}</div>`;
+          const right = document.createElement('div'); right.className = 'actions';
+          const pv = document.createElement('button'); pv.className = 'btn'; pv.textContent = 'Preview';
+          pv.onclick = () => openPreview(r);
+          const dl = document.createElement('button'); dl.className = 'btn btn-ghost'; dl.textContent = 'Download';
+          dl.onclick = () => downloadRecord(r);
+          const del = document.createElement('button'); del.className = 'btn btn-danger'; del.textContent = 'Hapus';
+          del.onclick = async () => {
+            if (confirm('Hapus file "' + r.name + '" ?')) { await deleteById(r.id); loadFilesFor(fieldLabel); }
+          };
+          right.appendChild(pv); right.appendChild(dl); right.appendChild(del);
+          item.appendChild(left); item.appendChild(right);
+          fileListEl.appendChild(item);
+        });
+      } catch (err) {
+        console.error(err);
+        fileListEl.innerHTML = '<div class="hint">Gagal memuat file.</div>';
+      }
+    }
+
+    /* preview modal / open */
+    function openPreview(record) {
+      // ensure blob
+      const blob = record.blob instanceof Blob ? record.blob : new Blob([record.blob], { type: record.type || 'application/octet-stream' });
+      const url = URL.createObjectURL(blob);
+      previewContent.innerHTML = '';
+      if (record.type && record.type.startsWith('image/')) {
+        previewContent.innerHTML = `<img src="${url}" alt="${escapeHtml(record.name)}">`;
+      } else if (record.type === 'application/pdf') {
+        previewContent.innerHTML = `<iframe src="${url}"></iframe>`;
+      } else {
+        previewContent.innerHTML = `<div style="padding:8px;color:#cbd5e1"><b>${escapeHtml(record.name)}</b><div style="margin-top:6px;color:#94a3b8">Jenis file tidak dapat dipreview. Silakan download.</div></div>`;
+      }
+      previewModal.style.display = 'flex';
+      closePreviewBtn.onclick = () => {
+        previewModal.style.display = 'none';
+        try { URL.revokeObjectURL(url); } catch (e) { }
+      };
+    }
+
+    /* download */
+    function downloadRecord(record) {
+      const blob = record.blob instanceof Blob ? record.blob : new Blob([record.blob], { type: record.type || 'application/octet-stream' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = record.name || 'download';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    /* small helpers */
+    function escapeHtml(s) { return String(s).replaceAll('<', '&lt;').replaceAll('>', '&gt;'); }
+
+    /* initial: reset viewer message */
+    fileListEl.innerHTML = '<div class="hint">Pilih bidang untuk melihat file.</div>';
+
+  </script>
+</body>
+
+</html>
